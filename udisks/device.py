@@ -16,10 +16,33 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 import dbus
-
 from interface import Interface
+from interface import DEVICE_IFACE
+from exceptions import *
 
 class Device(Interface):
+
+    def __init__(self, object_path):
+        Interface.__init__(self, object_path)
+        self.dev_iface = dbus.Interface(self.object, DEVICE_IFACE)
+
+    def FilesystemMount(self, filesystem_type, options=''):
+        try:
+            return self.dev_iface.FilesystemMount(filesystem_type, options)
+        except dbus.exceptions.DBusException, e:
+            e_name = e.get_dbus_name()
+            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
+                raise NotAuthorized("No PolicyKit authorization")
+            elif e_name == "org.freedesktop.UDisks.Error.Busy":
+                raise Busy("Device is busy")
+            elif e_name == "org.freedesktop.UDisks.Error.Failed":
+                raise Failed("Operation failed")
+            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
+                raise Cancelled("Job was cancelled")
+            elif e_name == "org.freedesktop.UDisks.Error.InvalidOption":
+                raise InvalidOption("An invalid or malformed mount option was given")
+            elif e_name == "org.freedesktop.UDisks.Error.FilesystemDriverMissing":
+                raise FilesystemDriverMissing("The driver for this file system type is not available")
 
     @property
     def NativePath(self):

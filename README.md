@@ -13,6 +13,7 @@ Contributor list
 ----------------
 
 Lucas Alvares Gomes (aka umago) <lucasagomes@gmail.com>
+
 Lucas Ces Santos (aka pespa) <lucas.ces@gmail.com>
 
 Contributing

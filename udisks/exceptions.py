@@ -15,22 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 
-import dbus
+class NotAuthorized(Exception):
+    pass
 
-DISKS_IFACE = "org.freedesktop.UDisks"
-DEVICE_IFACE = "org.freedesktop.UDisks.Device"
-PROPS_IFACE = "org.freedesktop.DBus.Properties"
+class Busy(Exception):
+    pass
 
-class Interface:
+class Failed(Exception):
+    pass
 
-    def __init__(self, object_path):
-        self.bus = dbus.SystemBus()
-        self.object_path = object_path    
-        self.object = self.bus.get_object("org.freedesktop.UDisks", self.object_path)
-        self.properties_iface = dbus.Interface(self.object, PROPS_IFACE)
-    
-    def _get_property(self, name): 
-        return self.properties_iface.Get('org.freedesktop.UDisks.Device', name)
+class Cancelled(Exception):
+    pass
 
-    def __str__(self):
-        return str(self.object_path)
+class InvalidOption(Exception):
+    pass
+
+class FilesystemDriverMissing(Exception):
+    pass
