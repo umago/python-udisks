@@ -26,110 +26,67 @@ class Device(Interface):
         Interface.__init__(self, object_path)
         self.dev_iface = dbus.Interface(self.object, DEVICE_IFACE)
 
-    def JobCancel(self):
+    def _exec_func(self, func, args=()):
         try:
-            self.dev_iface.JobCancel()
+            return func(*args)
         except dbus.exceptions.DBusException, e:
             e_name = e.get_dbus_name()
             if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
-                raise NotAuthorized("No PolicyKit authorization")
+                raise NotAuthorized("No PolicyKit authorization\n{0}".format(str(e)))
+            elif e_name == "org.freedesktop.UDisks.Error.Busy":
+                raise Busy("Device is busy\n{0]".format(str(e)))
             elif e_name == "org.freedesktop.UDisks.Error.Failed":
-                raise Failed("Operation failed")
+                raise Failed("Operation failed\n{0}".format(str(e)))
+            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
+                raise Cancelled("Job was cancelled\n{0}".format(str(e)))
+            elif e_name == "org.freedesktop.UDisks.Error.InvalidOption":
+                raise InvalidOption("An invalid or malformed mount option was given\n{0}".format(str(e)))
+            elif e_name == "org.freedesktop.UDisks.Error.FilesystemDriverMissing":
+                raise FilesystemDriverMissing("The driver for this file system type is not available\n{0}".format(str(e)))
+            elif e_name == "org.freedesktop.UDisks.Error.FilesystemToolsMissing":
+                raise FilesystemToolsMissing("Tool for this file system type is not available\n{0}".format(str(e)))
+
+    def JobCancel(self):
+        self._exec_func(self.dev_iface.JobCancel)
 
     def PartitionTableCreate(self, scheme, options=''):
-        raise NotImplementedError
+        self._exec_func(self.dev_iface.PartitionTableCreate, (scheme, options))
 
     def PartitionDelete(self, options=''):
-        raise NotImplementedError
+        self._exec_func(self.dev_iface.PartitionDelete, (options,))
 
     def PartitionCreate(self, offset, size, type, label, flags,
                         options, fstype, fsoptions):
-        raise NotImplementedError
+        dev = self._exec_func(self.dev_iface.PartitionCreate, (offset, size,
+                                                               type, label,
+                                                               flags, options,
+                                                               fstype, fsoptions))
+        return Device(dev)
 
     def PartitionModify(self, type, label, flags):
-        raise NotImplementedError
+        self._exec_func(self.dev_iface.PartitionModify, (type, label, flags))
 
     def FilesystemCreate(self, fstype, options=''):
-        raise NotImplementedError
+        self._exec_func(self.dev_iface.FilesystemCreate, (fstype, options))
 
     def FilesystemSetLabel(self, new_label):
-        try:
-            self.dev_iface.FilesystemSetLabel(new_label)
-        except dbus.exceptions.DBusException, e:
-            e_name = e.get_dbus_name()
-            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
-                raise NotAuthorized("No PolicyKit authorization")
-            elif e_name == "org.freedesktop.UDisks.Error.Busy":
-                raise Busy("Device is busy")
-            elif e_name == "org.freedesktop.UDisks.Error.Failed":
-                raise Failed("Operation failed")
-            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
-                raise Cancelled("Job was cancelled")
-            elif e_name == "org.freedesktop.UDisks.Error.FilesystemToolsMissing":
-                raise FilesystemToolsMissing("Tool for this file system type is not available")
+        self._exec_func(self.dev_iface.FilesystemSetLabel, (new_label,))
 
     def FilesystemMount(self, filesystem_type, options=''):
-        try:
-            return self.dev_iface.FilesystemMount(filesystem_type, options)
-        except dbus.exceptions.DBusException, e:
-            e_name = e.get_dbus_name()
-            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
-                raise NotAuthorized("No PolicyKit authorization")
-            elif e_name == "org.freedesktop.UDisks.Error.Busy":
-                raise Busy("Device is busy")
-            elif e_name == "org.freedesktop.UDisks.Error.Failed":
-                raise Failed("Operation failed")
-            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
-                raise Cancelled("Job was cancelled")
-            elif e_name == "org.freedesktop.UDisks.Error.InvalidOption":
-                raise InvalidOption("An invalid or malformed mount option was given")
-            elif e_name == "org.freedesktop.UDisks.Error.FilesystemDriverMissing":
-                raise FilesystemDriverMissing("The driver for this file system type is not available")
+        return self._exec_func(self.dev_iface.FilesystemMount, (filesystem_type, options))
 
     def FilesystemUnmount(self, options=''):
-        try:
-            self.dev_iface.FilesystemUnmount(options)
-        except dbus.exceptions.DBusException, e:
-            e_name = e.get_dbus_name()
-            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
-                raise NotAuthorized("No PolicyKit authorization")
-            elif e_name == "org.freedesktop.UDisks.Error.Busy":
-                raise Busy("Device is busy")
-            elif e_name == "org.freedesktop.UDisks.Error.Failed":
-                raise Failed("Operation failed")
-            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
-                raise Cancelled("Job was cancelled")
-            elif e_name == "org.freedesktop.UDisks.Error.InvalidOption":
-                raise InvalidOption("An invalid or malformed mount option was given")
+        self._exec_func(self.dev_iface.FilesystemUnmount, (options,))
 
     def FilesystemCheck(self, options=''):
-        try:
-            return bool(self.dev_iface.FilesystemCheck(options))
-        except dbus.exceptions.DBusException, e:
-            e_name = e.get_dbus_name()
-            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
-                raise NotAuthorized("No PolicyKit authorization")
-            elif e_name == "org.freedesktop.UDisks.Error.Busy":
-                raise Busy("Device is mounted")
-            elif e_name == "org.freedesktop.UDisks.Error.Failed":
-                raise Failed("Operation failed")
-            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
-                raise Cancelled("Job was cancelled")
+        return bool(self._exec_func(self.dev_iface.FilesystemCheck, (options,)))
 
     def FilesystemListOpenFiles(self):
-        try:
-            l = list()
-            for f in self.dev_iface.FilesystemListOpenFiles():
-                l.append( (int(f[0]), int(f[1]), str(f[2])) )
-            return l
-        except dbus.exceptions.DBusException, e:
-            e_name = e.get_dbus_name()
-            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
-                raise NotAuthorized("No PolicyKit authorization")
-            elif e_name == "org.freedesktop.UDisks.Error.Busy":
-                raise Busy("Device is mounted")
-            elif e_name == "org.freedesktop.UDisks.Error.Failed":
-                raise Failed("Operation failed")
+        l = list()
+        files = self._exec_func(self.dev_iface.FilesystemListOpenFiles)
+        for f in files:
+            l.append((int(f[0]), int(f[1]), str(f[2])))
+        return l
 
     def LuksUnlock(self, passphrase, options=''):
         raise NotImplementedError
