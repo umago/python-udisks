@@ -32,3 +32,6 @@ class InvalidOption(Exception):
 
 class FilesystemDriverMissing(Exception):
     pass
+
+class FilesystemToolsMissing(Exception):
+    pass

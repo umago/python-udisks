@@ -26,6 +26,48 @@ class Device(Interface):
         Interface.__init__(self, object_path)
         self.dev_iface = dbus.Interface(self.object, DEVICE_IFACE)
 
+    def JobCancel(self):
+        try:
+            self.dev_iface.JobCancel()
+        except dbus.exceptions.DBusException, e:
+            e_name = e.get_dbus_name()
+            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
+                raise NotAuthorized("No PolicyKit authorization")
+            elif e_name == "org.freedesktop.UDisks.Error.Failed":
+                raise Failed("Operation failed")
+
+    def PartitionTableCreate(self, scheme, options=''):
+        raise NotImplementedError
+
+    def PartitionDelete(self, options=''):
+        raise NotImplementedError
+
+    def PartitionCreate(self, offset, size, type, label, flags,
+                        options, fstype, fsoptions):
+        raise NotImplementedError
+
+    def PartitionModify(self, type, label, flags):
+        raise NotImplementedError
+
+    def FilesystemCreate(self, fstype, options=''):
+        raise NotImplementedError
+
+    def FilesystemSetLabel(self, new_label):
+        try:
+            self.dev_iface.FilesystemSetLabel(new_label)
+        except dbus.exceptions.DBusException, e:
+            e_name = e.get_dbus_name()
+            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
+                raise NotAuthorized("No PolicyKit authorization")
+            elif e_name == "org.freedesktop.UDisks.Error.Busy":
+                raise Busy("Device is busy")
+            elif e_name == "org.freedesktop.UDisks.Error.Failed":
+                raise Failed("Operation failed")
+            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
+                raise Cancelled("Job was cancelled")
+            elif e_name == "org.freedesktop.UDisks.Error.FilesystemToolsMissing":
+                raise FilesystemToolsMissing("Tool for this file system type is not available")
+
     def FilesystemMount(self, filesystem_type, options=''):
         try:
             return self.dev_iface.FilesystemMount(filesystem_type, options)
@@ -43,6 +85,105 @@ class Device(Interface):
                 raise InvalidOption("An invalid or malformed mount option was given")
             elif e_name == "org.freedesktop.UDisks.Error.FilesystemDriverMissing":
                 raise FilesystemDriverMissing("The driver for this file system type is not available")
+
+    def FilesystemUnmount(self, options=''):
+        try:
+            self.dev_iface.FilesystemUnmount(options)
+        except dbus.exceptions.DBusException, e:
+            e_name = e.get_dbus_name()
+            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
+                raise NotAuthorized("No PolicyKit authorization")
+            elif e_name == "org.freedesktop.UDisks.Error.Busy":
+                raise Busy("Device is busy")
+            elif e_name == "org.freedesktop.UDisks.Error.Failed":
+                raise Failed("Operation failed")
+            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
+                raise Cancelled("Job was cancelled")
+            elif e_name == "org.freedesktop.UDisks.Error.InvalidOption":
+                raise InvalidOption("An invalid or malformed mount option was given")
+
+    def FilesystemCheck(self, options=''):
+        try:
+            return bool(self.dev_iface.FilesystemCheck(options))
+        except dbus.exceptions.DBusException, e:
+            e_name = e.get_dbus_name()
+            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
+                raise NotAuthorized("No PolicyKit authorization")
+            elif e_name == "org.freedesktop.UDisks.Error.Busy":
+                raise Busy("Device is mounted")
+            elif e_name == "org.freedesktop.UDisks.Error.Failed":
+                raise Failed("Operation failed")
+            elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
+                raise Cancelled("Job was cancelled")
+
+    def FilesystemListOpenFiles(self):
+        try:
+            l = list()
+            for f in self.dev_iface.FilesystemListOpenFiles():
+                l.append( (int(f[0]), int(f[1]), str(f[2])) )
+            return l
+        except dbus.exceptions.DBusException, e:
+            e_name = e.get_dbus_name()
+            if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
+                raise NotAuthorized("No PolicyKit authorization")
+            elif e_name == "org.freedesktop.UDisks.Error.Busy":
+                raise Busy("Device is mounted")
+            elif e_name == "org.freedesktop.UDisks.Error.Failed":
+                raise Failed("Operation failed")
+
+    def LuksUnlock(self, passphrase, options=''):
+        raise NotImplementedError
+
+    def LuksLock(self, options=''):
+        raise NotImplementedError
+
+    def LuksChangePassphrase(self, current_passphrase,  new_passphrase):
+        raise NotImplementedError
+
+    def LinuxMdAddComponent(self, component, options=''):
+        raise NotImplementedError
+
+    def LinuxMdRemoveComponent(self, component, options=''):
+        raise NotImplementedError
+
+    def LinuxMdStop(self, options=''):
+        raise NotImplementedError 
+
+    def LinuxLvm2LVStop(self, options=''):
+        raise NotImplementedError
+
+    def LinuxMdCheck(self, options=''):
+        raise NotImplementedError
+
+    def DriveInhibitPolling(self, options=''):
+        raise NotImplementedError
+
+    def DriveUninhibitPolling(self, cookie):
+        raise NotImplementedError
+
+    def DrivePollMedia(self):
+        raise NotImplementedError
+
+    def DriveEject(self, options=''):
+        raise NotImplementedError
+
+    def DriveDetach(self, options=''):
+        raise NotImplementedError
+
+    def DriveSetSpindownTimeout(self, timeout_seconds, options=''):
+        raise NotImplementedError
+
+    def DriveUnsetSpindownTimeout(self, cookie):
+        raise NotImplementedError
+
+    def DriveAtaSmartRefreshData(self, options=''):
+        raise NotImplementedError
+
+    def DriveAtaSmartInitiateSelftest(self, test, options=''):
+        raise NotImplementedError
+
+    def DriveBenchmark(self, do_write_benchmark, options=''):
+        raise NotImplementedError
 
     @property
     def NativePath(self):
