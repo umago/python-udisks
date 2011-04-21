@@ -32,19 +32,19 @@ class Device(Interface):
         except dbus.exceptions.DBusException, e:
             e_name = e.get_dbus_name()
             if e_name == "org.freedesktop.PolicyKit.Error.NotAuthorized":
-                raise NotAuthorized("No PolicyKit authorization\n{0}".format(str(e)))
+                raise NotAuthorized(str(e))
             elif e_name == "org.freedesktop.UDisks.Error.Busy":
-                raise Busy("Device is busy\n{0]".format(str(e)))
+                raise Busy(str(e))
             elif e_name == "org.freedesktop.UDisks.Error.Failed":
-                raise Failed("Operation failed\n{0}".format(str(e)))
+                raise Failed(str(e))
             elif e_name == "org.freedesktop.UDisks.Error.Cancelled":
-                raise Cancelled("Job was cancelled\n{0}".format(str(e)))
+                raise Cancelled(str(e))
             elif e_name == "org.freedesktop.UDisks.Error.InvalidOption":
-                raise InvalidOption("An invalid or malformed mount option was given\n{0}".format(str(e)))
+                raise InvalidOption(str(e))
             elif e_name == "org.freedesktop.UDisks.Error.FilesystemDriverMissing":
-                raise FilesystemDriverMissing("The driver for this file system type is not available\n{0}".format(str(e)))
+                raise FilesystemDriverMissing(str(e))
             elif e_name == "org.freedesktop.UDisks.Error.FilesystemToolsMissing":
-                raise FilesystemToolsMissing("Tool for this file system type is not available\n{0}".format(str(e)))
+                raise FilesystemToolsMissing(str(e))
 
     def JobCancel(self):
         self._exec_func(self.dev_iface.JobCancel)
